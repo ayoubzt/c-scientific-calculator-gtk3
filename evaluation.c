@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "postfix.h"
+#include "evaluation.h"
 
 
 void tok(char *string, token token[]) {
@@ -17,11 +17,11 @@ void tok(char *string, token token[]) {
         token[e].terminator = false;
         if (string[i] == '.'){
             r = 0.1;
-        }else if (string[i] >= 48 && string[i] <= 57) {
+        }else if (string[i] >= '0' && string[i] <= '9') {
             if (r>=1){ 
                 token[e].value = token[e].value*10 + (string[i]-48);
             } else {
-                token[e].value += (string[i]-48)*r;
+                token[e].value += (string[i]-'0')*r;
                 r*= 0.1;
             }
         } else {
@@ -29,67 +29,33 @@ void tok(char *string, token token[]) {
             e++;
             token[e].terminator = false;
             switch (string[i]) {
-                case 'e':
-                    token[e].value = 2.718281;
-                    e++;
-                    break;
-                case 'p':
-                    token[e].value = 3.141592;
-                    e++;
-                    break;
-                case '+':
-                    token[e].opr = '+';
-                    token[e].precedence = 1;
-                    break;
-                case '-':
-                    token[e].opr = '-';
-                    token[e].precedence = 1;
-                    break;
-                case '*':
-                    token[e].opr = '*';
-                    token[e].precedence = 2;
-                    break;
-                case '/':
-                    token[e].opr = '/';
-                    token[e].precedence = 2;
-                    break;
-                case '^':
-                    token[e].opr = '^';
-                    token[e].precedence = 3;
-                    break;
-                case '_':
-                    token[e].function = '_';
-                    break;
-                case '(':
-                    token[e].parentheses = '(';
-                    break;
-                case ')':
-                    token[e].parentheses = ')';
-                    break;
-                
-                case 's':
-                    token[e].function = 's';
-                    break;
-                case 'c':
-                    token[e].function = 'c';
-                    break;
-                case 't':
-                    token[e].function = 't';
-                    break;
-                case '!':
-                    token[e].function = '!';
-                    break;
-                case 'S':
-                    token[e].function = 'S';
-                    break;
-                case 'l':
-                    token[e].function = 'l';
-                    break;
-                case 'n':
-                    token[e].function = 'n';
-                    break;
+
+                //constants part
+
+                case 'e':token[e].value = 2.718281; e++;                            break;
+                case 'p': token[e].value = 3.141592; e++;                           break;
+
+                //operators part
+
+                case '+': token[e].opr = '+'; token[e].precedence = 1;              break;
+                case '-': token[e].opr = '-'; token[e].precedence = 1;              break;
+                case '*': token[e].opr = '*'; token[e].precedence = 2;              break;
+                case '/': token[e].opr = '/'; token[e].precedence = 2;              break;
+                case '^': token[e].opr = '^'; token[e].precedence = 3;              break;
+
+                //functions part
+
+                case '(': token[e].parentheses = '(';   break;
+                case ')': token[e].parentheses = ')';   break;
+                case 's': token[e].function = 's';      break;       //sin
+                case 'c': token[e].function = 'c';      break;       //cos
+                case 't': token[e].function = 't';      break;       //tan
+                case '!': token[e].function = '!';      break;       //factorial
+                case 'S': token[e].function = 'S';      break;       //square root
+                case 'l': token[e].function = 'l';      break;       //natural logarithm 'ln'
+                case 'n': token[e].function = 'n';      break;       //negation
             }
-            if (string[i+1] >= 48 && string[i+1] <= 57) e++;
+            if (string[i+1] >= '0' && string[i+1] <= '9') e++;
         }
         i++;
 
@@ -188,58 +154,30 @@ double evaluate(char* string) {
     }
     postfix(string, queue);
     while (queue[i].terminator == false) {
-        if (queue[i].value) {push(stack, queue[i]);}
-        else if(queue[i].opr) {
-            operand2 = lastElement(stack);
-            rem(stack);
-            operand1 = lastElement(stack);
-            rem(stack);
+         if(queue[i].opr) {
+            operand2 = lastElement(stack);  rem(stack);
+            operand1 = lastElement(stack);  rem(stack);
             switch (queue[i].opr) {
-                case '+':
-                operand1.value += operand2.value;
-                break;
-                case '-':
-                operand1.value -= operand2.value;
-                break;
-                case '*':
-                operand1.value = operand2.value * operand1.value;
-                break;
-                case '/':
-                operand1.value /= operand2.value;
-                break;
-                case '^':
-                operand1.value = pow(operand1.value, operand2.value);
-                break;
+                case '+': operand1.value += operand2.value;                        break;
+                case '-': operand1.value -= operand2.value;                        break;
+                case '*': operand1.value *= operand2.value;                        break;
+                case '/': operand1.value /= operand2.value;                        break;
+                case '^': operand1.value = pow(operand1.value, operand2.value);    break;
             }
             push(stack, operand1);
-        } else {
-            operand1 = lastElement(stack);
-            rem(stack);
+        } else if(queue[i].function) {
+            operand1 = lastElement(stack);  rem(stack);
             switch (queue[i].function) {
-                case 'c':
-                //operand1.value = cos(operand1.value);
-                break;
-                case 's':
-                //operand1.value = sin(operand1.value);
-                break;
-                case 't':
-                //operand2.value = tan(operand1.value);
-                case '!':
-                //intructions to check if the opeand is an integer are to be added 
-                // operand1.value = factorial(operand1.value);
-                break;
-                case 'S':
-                // operand1.value = sqrt(operand1.value);
-                break;
-                case 'l':
-                // operand1.value = ln(operand1.value);
-                break;
-                case 'n':
-                // operand1.value = -operand1.value;
-                break;
+                // case 'c': operand1.value = cos(operand1.value);         break;
+                // case 's': operand1.value = sin(operand1.value);         break;
+                // case 't': operand2.value = tan(operand1.value);         break;
+                // case '!': operand1.value = factorial(operand1.value);   break;
+                // case 'S': operand1.value = sqrt(operand1.value);        break;
+                // case 'l': operand1.value = ln(operand1.value);          break;
+                // case 'n': operand1.value = -operand1.value;             break;
             }
             push(stack, operand1);
-        }
+        } else push(stack, queue[i]);
         i++;
     }
     return stack[0].value;
