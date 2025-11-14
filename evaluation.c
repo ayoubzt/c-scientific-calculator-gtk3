@@ -30,6 +30,9 @@ void tok(char *string, token token[]) {
             token[e].terminator = false;
             switch (string[i]) {
 
+                case '(': token[e].parentheses = '(';   break;
+                case ')': token[e].parentheses = ')';   break;
+                
                 //constants part
 
                 case 'e':token[e].value = 2.718281; e++;                            break;
@@ -44,9 +47,7 @@ void tok(char *string, token token[]) {
                 case '^': token[e].opr = '^'; token[e].precedence = 3;              break;
 
                 //functions part
-
-                case '(': token[e].parentheses = '(';   break;
-                case ')': token[e].parentheses = ')';   break;
+                
                 case 's': token[e].function = 's';      break;       //sin
                 case 'c': token[e].function = 'c';      break;       //cos
                 case 't': token[e].function = 't';      break;       //tan
