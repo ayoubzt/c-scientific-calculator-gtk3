@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "postfix.h"
+#include "evaluation.h"
 
 
 void tok(char *string, token token[]) {
