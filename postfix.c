@@ -132,14 +132,16 @@ void postfix(char* string, token output[]) {
             push(operatorStack, queue[i]);
         } else if (queue[i].parentheses == ')') {
             repeat1:
-            pop(operatorStack, output);
-            if(lastElement(operatorStack).parentheses) {
+            if(lastElement(operatorStack).parentheses == '\0') {
+                pop(operatorStack, output);
+                if(lastElement(operatorStack).parentheses == '\0') goto repeat1;
+            }
+            else {
                 pop(operatorStack, dump);
                 if(lastElement(operatorStack).function) {
                     pop(operatorStack, output);
                 }
             }
-            else goto repeat1;
         } else push(output, queue[i]);
         i++;
     }
