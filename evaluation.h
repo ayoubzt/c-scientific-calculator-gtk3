@@ -1,40 +1,53 @@
-//  token is a strutcture that facilates parsing a string containing an infix mathematical expression 
+
+
+                                                    /*IMPORTANT*/
+
+/*THE STRING MUST END WITH AN UNSIGNIFICANT CHARACHTER " default is ~ " FOR THE FUNCTIONS THAT REQUIRE A STRING TO WORK  */
+
+                                                    /*IMPORTANT*/
+
+
+// this structure facilates the transition from infix to postfix through assigning components to each significant part of the string
 
 typedef struct token token;
 struct token {
-    double value;
-    char opr;
-    unsigned precedence;
-    char function;
-    char parentheses;
-    bool terminator;
+    double value;           //for a number
+    char operator;          //for an operator
+    unsigned precedence;    //for an operator
+    char function;          //for a function
+    char parentheses;       //for parentheses
+    char isNumber;          //for a number
 };
 
-//  tokenize the string and store the tokens in order in a tokens array
+// this structure combines an array of the previous strutures with an additional component "top" which allows us to determine where the array ends
 
-void tok(char *string, token token[]);
+typedef struct stack stack;
+struct stack {
+    token array[1000];
+    int top;
+};
 
+//this prcedure intilizes the top of a stack to -1
 
-//  pushes a token into the end of an array
+void initStack(stack* Stack);
 
-void push(token stack[],token token);
+//this procedure pushes a token to the end of an array of a stack structure and assigns it as the new end
 
-//  pops the last tokken of a tokken array into another tokken array
+void push(stack* Stack, token Tok);
 
-void pop(token src[], token dest[]);
+//this procedure takes a token of a Source stack to and pushes it to the end of Destination Stack
 
-//  returns the last tokken of a tokken array
+void pop(stack* Source, stack* Dest);
 
-token lastElement(token src[]);
+//this procedure parses a string into a stack
 
-//  Converts a mathematical expression(string) from infix to postfix such that the final expression is represenred with an array tokkens
+void tokenise(char* string, stack* tokens);
 
-void postfix(char* string, token output[]);
+//this procedure converts a mathematical expression(string) in the infix form to its equivalent postfix form stored in a stack
 
-//  evaluates a mathematical expression(string) and returns its result
+void postfix(char* infix, stack* postfix);
 
-double evaluate(char* string);
+//this function evaluates a mathematical experssion(string) and returns the result
 
-//  removes the last element of a stack
+double Evaluate(char* string);
 
-void rem(token stack[]);

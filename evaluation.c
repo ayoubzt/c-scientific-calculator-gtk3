@@ -1,185 +1,140 @@
-#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
 #include "evaluation.h"
 
+void initStack(stack* Stack) {
+    Stack->top = -1;
+}
 
-void tok(char *string, token token[]) {
-    unsigned i = 0, e = 0;
-    double r = 1;
-    for (int i = 0; i<1000; i++) {
-    token[i].value = 0;
-    token[i].opr = '\0';
-    token[i].precedence = 0;
-    token[i].function = '\0';
-    token[i].parentheses = '\0';
-    token[i].terminator = true;
-   }
-    while(string[i] != '\0') {
-        token[e].terminator = false;
-        if (string[i] == '.'){
-            r = 0.1;
-        }else if (string[i] >= '0' && string[i] <= '9') {
-            if (r>=1){ 
-                token[e].value = token[e].value*10 + (string[i]-48);
-            } else {
-                token[e].value += (string[i]-'0')*r;
-                r*= 0.1;
-            }
+void initToken(token* tok) {
+    *tok = (token){0, 0, 0, 0, 0, 0};
+}
+
+void push(stack* Stack, token Tok) {
+    Stack->top++;
+    Stack->array[Stack->top] = Tok;
+} 
+
+void pop(stack* Source, stack* Dest) {
+    push(Dest, Source->array[Source->top]);
+    Source->top--;
+}
+
+void tokenise(char* string, stack* tokens) {
+    initStack(tokens);
+    token temp; initToken(&temp);
+    const token multiply = {0, '*', 2, 0, 0 ,0};
+    unsigned i=0;
+    double decimal=0; 
+    char charachterHolder[2] = "\0";
+    while (string[i] != '\0') {
+        charachterHolder[0] = string[i];
+        if (string[i] == '.') decimal=0.1;
+        else if (string[i] >= '0' && string[i] <= '9') {
+            temp.isNumber = 1;
+            if (decimal == 0) temp.value = temp.value*10 + string[i]-'0';
+            else {temp.value += (string[i]-'0')*decimal; decimal*=0.1;}
         } else {
-            r=1;
-            e++;
-            token[e].terminator = false;
+            if(temp.isNumber) {
+                push(tokens, temp); initToken(&temp);
+                charachterHolder[0] = string[i];
+                if(strpbrk(charachterHolder, "(cstlSep")) push(tokens, multiply);
+            }
+            decimal = 0;
             switch (string[i]) {
+                //constants
+                case 'e': temp.value = 2.718281; temp.isNumber = 1; push(tokens, temp); initToken(&temp);    break;
+                case 'p': temp.value = 3.141592; temp.isNumber = 1; push(tokens, temp); initToken(&temp);    break;
 
-                case '(': token[e].parentheses = '(';   break;
-                case ')': token[e].parentheses = ')';   break;
-                
-                //constants part
+                //parentheses
+                case '(': temp.parentheses = '('; push(tokens, temp); initToken(&temp);                  break;
+                case ')': temp.parentheses = ')'; push(tokens, temp); initToken(&temp);                  break;
 
-                case 'e':token[e].value = 2.718281; e++;                            break;
-                case 'p': token[e].value = 3.141592; e++;                           break;
+                //operators
+                case '+': temp.operator = '+'; temp.precedence = 1; push(tokens, temp); initToken(&temp); break;
+                case '-': temp.operator = '-'; temp.precedence = 1; push(tokens, temp); initToken(&temp); break;
+                case '*': temp.operator = '*'; temp.precedence = 2; push(tokens, temp); initToken(&temp); break;
+                case '/': temp.operator = '/'; temp.precedence = 2; push(tokens, temp); initToken(&temp); break;
+                case '^': temp.operator = '^'; temp.precedence = 3; push(tokens, temp); initToken(&temp); break;
 
-                //operators part
-
-                case '+': token[e].opr = '+'; token[e].precedence = 1;              break;
-                case '-': token[e].opr = '-'; token[e].precedence = 1;              break;
-                case '*': token[e].opr = '*'; token[e].precedence = 2;              break;
-                case '/': token[e].opr = '/'; token[e].precedence = 2;              break;
-                case '^': token[e].opr = '^'; token[e].precedence = 3;              break;
-
-                //functions part
-                
-                case 's': token[e].function = 's';      break;       //sin
-                case 'c': token[e].function = 'c';      break;       //cos
-                case 't': token[e].function = 't';      break;       //tan
-                case '!': token[e].function = '!';      break;       //factorial
-                case 'S': token[e].function = 'S';      break;       //square root
-                case 'l': token[e].function = 'l';      break;       //natural logarithm 'ln'
-                case 'n': token[e].function = 'n';      break;       //negation
+                //functions
+                case 'c': temp.function = 'c'; push(tokens, temp); initToken(&temp);                      break;
+                case 's': temp.function = 's'; push(tokens, temp); initToken(&temp);                      break;
+                case 't': temp.function = 't'; push(tokens, temp); initToken(&temp);                      break;
+                case 'l': temp.function = 'l'; push(tokens, temp); initToken(&temp);                      break;
+                case 'S': temp.function = 'S'; push(tokens, temp); initToken(&temp);                      break;
+                case 'f': temp.function = 'f'; push(tokens, temp); initToken(&temp);                      break;
             }
-            if (string[i+1] >= '0' && string[i+1] <= '9') e++;
+            if ((tokens->array[tokens->top].parentheses == ')' || tokens->array[tokens->top].value == 2.718281 || tokens->array[tokens->top].value == 3.141592) && ((string[i+1] >= '0' && string[i+1] <= '9') || string[i+1] == 'e' || string[i+1] == 'p')) push(tokens, multiply);
         }
         i++;
-
     }
 }
 
-void push(token stack[],token token){
-    for (unsigned i = 0; i < 1000; i++) {
-        if (stack[i].terminator == true) {
-            stack[i] = token;
-            break;
+void postfix(char* infix, stack* postfix) {
+    stack Stack, Operators;
+    initStack(postfix); initStack(&Operators);
+    tokenise(infix, &Stack);
+    for (int i = 0; i<=Stack.top; i++) {
+        if (Stack.array[i].isNumber) push(postfix, Stack.array[i]);
+        else if (Stack.array[i].function || Stack.array[i].parentheses == '(') push(&Operators, Stack.array[i]);
+        else if (Stack.array[i].parentheses == ')') {
+            while(Operators.array[Operators.top].parentheses != '(') {
+                pop(&Operators, postfix);
+            }
+            Operators.top = Operators.top - 1;
+            if (Operators.array[Operators.top].function) pop(&Operators, postfix);
         }
-    }
-}
-void pop(token src[], token dest[]) {
-    int index = -1;
-    for (unsigned i = 0; i < 1000; i++) {
-        if (index == -1) {
-        if (src[i].terminator == true){
-            index = i-1;
-            if (index == -1) break;
-            i = 0;
-        }}  else if (dest[i].terminator == true) {
-                dest[i] = src[index];
-                src[index] = (token){0, '\0', 0, '\0', '\0', true};
-                break;
-            }
-        
-    }
-
-}
-
-token lastElement(token src[]) {
-    unsigned i =0;
-    while (src[i].terminator == false) {
-        i++;
-    }
-    if (i == 0) return src[0];
-    else return src[i-1];
-}
-
-void postfix(char* string, token output[]) {
-    token operatorStack[1000], queue[1000];
-    unsigned i = 0, e;
-    for (int e = 0; e < 1000; e++) {
-        queue[e] = operatorStack[e] = output[e] = (token){0, '\0', 0, '\0', '\0', true};
-    }
-    tok(string, queue);
-    while (queue[i].terminator == false) {
-        if(queue[i].opr) {
-            repeat:
-            if (queue[i].precedence > lastElement(operatorStack).precedence) {
-                push(operatorStack, queue[i]);
-                e++;
-            } else {
-                e--;
-                pop(operatorStack, output);
-                goto repeat;
-            }
-        } else if (queue[i].function || queue[i].parentheses == '(') {
-            push(operatorStack, queue[i]);
-        } else if (queue[i].parentheses == ')') {
-            repeat1:
-            if(lastElement(operatorStack).parentheses == '\0') {
-                pop(operatorStack, output);
-                if(lastElement(operatorStack).parentheses == '\0') goto repeat1;
-            }
+        else {
+            if (Stack.array[i].precedence > Operators.array[Operators.top].precedence) push(&Operators, Stack.array[i]);
             else {
-                rem(operatorStack);
-                if(lastElement(operatorStack).function) {
-                    pop(operatorStack, output);
+                while (1) {
+                    pop(&Operators, postfix);
+                    if (Stack.array[i].precedence > Operators.array[Operators.top].precedence)  {push(&Operators, Stack.array[i]); break;}
                 }
             }
-        } else push(output, queue[i]);
-        i++;
-    }
-        
-        while(!(lastElement(operatorStack).terminator)) {
-            pop(operatorStack, output);
         }
-}
-void rem(token stack[]) {
-    unsigned i = 0;
-    while (stack[i].terminator == false) {
-        i++;
     }
-    if(i>0) stack[i-1] = (token){0, '\0', 0, '\0', '\0', true};
+    for (int i = Operators.top; i >= 0; i--) {
+        pop(&Operators, postfix);
+    }
 }
 
-double evaluate(char* string) {
-    token stack[1000], queue[1000];
-    unsigned i = 0;
-    token operand1, operand2;
-    for (unsigned e = 0; e < 1000; e++) {
-        stack[e] = (token){0, '\0', 0, '\0', '\0', true};
-    }
-    postfix(string, queue);
-    while (queue[i].terminator == false) {
-         if(queue[i].opr) {
-            operand2 = lastElement(stack);  rem(stack);
-            operand1 = lastElement(stack);  rem(stack);
-            switch (queue[i].opr) {
-                case '+': operand1.value += operand2.value;                        break;
-                case '-': operand1.value -= operand2.value;                        break;
-                case '*': operand1.value *= operand2.value;                        break;
-                case '/': operand1.value /= operand2.value;                        break;
-                case '^': operand1.value = pow(operand1.value, operand2.value);    break;
+double Evaluate(char* string) {
+    stack queue, output, Stack;
+    initStack(&output); initStack(&Stack);
+    postfix(string, &queue);
+    for (int i = 0; i <= queue.top; i++) {
+        if(queue.array[i].isNumber) {push(&Stack, queue.array[i]);}
+        else if (queue.array[i].function) {
+            switch (queue.array[i].function) {
+                case 'c': Stack.array[Stack.top].value = cos(Stack.array[Stack.top].value); break;
+                case 's': Stack.array[Stack.top].value = sin(Stack.array[Stack.top].value); break;
+                case 't': Stack.array[Stack.top].value = tan(Stack.array[Stack.top].value); break;
+                case 'S': if (Stack.array[Stack.top].value >= 0) {
+                                Stack.array[Stack.top].value = sqrt(Stack.array[Stack.top].value); break;
+                            } else {return NAN; break;}
+                // case 'l': if(Stack.array[Stack.top].value >= 0) {
+                //                 Stack.array[Stack.top].value = ln(Stack.array[Stack.top].value); break;
+                //             } else {return NAN; break;}
+                // case 'f': if(isNatural(Stack.array[Stack.top].value)) {
+                //           Stack.array[Stack.top].value = sqrt(Stack.array[Stack.top].value); break;
+                //             } else {return NAN; break;}          
+                
+            }   
+        } else {
+            switch (queue.array[i].operator) {
+                case '+': Stack.array[Stack.top-1].value += Stack.array[Stack.top].value; Stack.top--; break;
+                case '-': Stack.array[Stack.top-1].value -= Stack.array[Stack.top].value; Stack.top--; break;
+                case '*': Stack.array[Stack.top-1].value *= Stack.array[Stack.top].value; Stack.top--; break;
+                case '/': Stack.array[Stack.top-1].value /= Stack.array[Stack.top].value; Stack.top--; break;
+                case '^': if (Stack.array[Stack.top-1].value || Stack.array[Stack.top].value) {
+                          Stack.array[Stack.top-1].value =  pow(Stack.array[Stack.top-1].value, Stack.array[Stack.top].value); Stack.top--; break;
+                          } else {return NAN; break;}
+                
             }
-            push(stack, operand1);
-        } else if(queue[i].function) {
-            operand1 = lastElement(stack);  rem(stack);
-            switch (queue[i].function) {
-                // case 'c': operand1.value = cos(operand1.value);         break;
-                // case 's': operand1.value = sin(operand1.value);         break;
-                // case 't': operand2.value = tan(operand1.value);         break;
-                // case '!': operand1.value = factorial(operand1.value);   break;
-                // case 'S': operand1.value = sqrt(operand1.value);        break;
-                // case 'l': operand1.value = ln(operand1.value);          break;
-                // case 'n': operand1.value = -operand1.value;             break;
-            }
-            push(stack, operand1);
-        } else push(stack, queue[i]);
-        i++;
+        }
     }
-    return stack[0].value;
-}
+    return Stack.array[0].value;
+} 
