@@ -52,7 +52,7 @@ ls   # Should show main.c, calc.c, calc.h
 ## 6️⃣ Compile the Scientific Calculator
 
 ```bash
-gcc main.c calc.c -o dist/calculator $(pkg-config --cflags --libs gtk+-3.0) -lm
+gcc main.c calc.c evaluation.c -o dist/calculator $(pkg-config --cflags --libs gtk+-3.0) -lm
 # Explanation:
 # - $(pkg-config --cflags --libs gtk+-3.0) → fetch GTK3 compiler & linker flags
 # - -lm → link the math library
