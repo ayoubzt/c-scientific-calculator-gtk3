@@ -1,10 +1,14 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "evaluation.h"
 
 GtkWidget *entry;
 GtkCssProvider *css_provider;
+char evString[1000] = {0};
+typedef struct but but;
+struct but { const char *label; const char *tok; };
 
 // Append character to entry
 void on_button_append(GtkWidget *widget, gpointer data) {
@@ -13,22 +17,49 @@ void on_button_append(GtkWidget *widget, gpointer data) {
     char buffer[512];
     snprintf(buffer, sizeof(buffer), "%s%s", current, txt);
     gtk_entry_set_text(GTK_ENTRY(entry), buffer);
+    strcat(evString, txt);
+}
+
+void on_button_append2(GtkWidget *widget, gpointer data) {
+    but* dat = (but *)data;
+    const char *txt = dat->label;
+    const char *current = gtk_entry_get_text(GTK_ENTRY(entry));
+    char buffer[512];
+    snprintf(buffer, sizeof(buffer), "%s%s", current, txt);
+    gtk_entry_set_text(GTK_ENTRY(entry), buffer);
+    const char *evText = dat->tok;
+    strcat(evString, evText);
 }
 
 // Clear entry
 void on_clear(GtkWidget *widget, gpointer data) {
     gtk_entry_set_text(GTK_ENTRY(entry), "");
+    for (int i = 0; i<1000; i++) {evString[i] = 0;}
+}
+
+void on_backs(GtkWidget *widget, gpointer data) {
+    char post[1000];
+    const char *current = gtk_entry_get_text(GTK_ENTRY(entry));
+    strcat(post, current);
+    post[strlen(current)-1] = 0;
+    gtk_entry_set_text(GTK_ENTRY(entry), post);
+    evString[strlen(evString)-1] = 0;
 }
 
 // Evaluate expression
 void on_equals(GtkWidget *widget, gpointer data) {
-    const char *text = gtk_entry_get_text(GTK_ENTRY(entry));
-    char expr[600];
-    snprintf(expr, sizeof(expr), "%s~", text);  // Add the mandatory "~"
-    double result = Evaluate(expr);
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "%g", result);
-    gtk_entry_set_text(GTK_ENTRY(entry), buffer);
+    // const char *text = gtk_entry_get_text(GTK_ENTRY(entry));
+    // char expr[600];
+    // snprintf(expr, sizeof(expr), "%s~", text);  // Add the mandatory "~"
+    if (evString[0]) {
+        const char* cond = "~";
+        strcat(evString, cond); 
+        double result = Evaluate(evString);
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), "%g", result);
+        gtk_entry_set_text(GTK_ENTRY(entry), buffer);
+        strcpy(evString, buffer);
+    } else gtk_entry_set_text(GTK_ENTRY(entry), "");
 }
 
 // Dark mode CSS (default)
@@ -101,21 +132,21 @@ int main(int argc, char *argv[]) {
     gtk_grid_attach(GTK_GRID(grid), mode_toggle, 5, 0, 1, 1);
 
     // Scientific buttons
-    struct { const char *label; const char *tok; } sci[] = {
-        {"sin", "s("}, {"cos", "c("}, {"tan", "t("},
-        {"log", "l("}, {"ln", "l("}, {"sqrt", "S("},
-        {"exp", "e("}, {"^", "^"}, {"!", "f("},
-        {"π", "3.141592"}, {"e", "2.718281"}
+    but sci[] = {
+        {"sin", "s"}, {"cos", "c"}, {"tan", "t"},
+        {"log", "l"}, {"ln", "l"}, {"sqrt", "S"},
+        {"(", "("}, {")", ")"}, {"^", "^"}, 
+        {"!", "f"}, {"π", "p"}, {"e", "e"}
     };
 
     int sci_pos = 0;
     for(int row=1; row<=2; row++){
         for(int col=0; col<6; col++){
-            if(sci_pos >= 11) break;
+            if(sci_pos >= 12) break;
             GtkWidget *btn = gtk_button_new_with_label(sci[sci_pos].label);
             gtk_widget_set_hexpand(btn, TRUE);
             gtk_widget_set_vexpand(btn, TRUE);
-            g_signal_connect(btn, "clicked", G_CALLBACK(on_button_append), (gpointer)sci[sci_pos].tok);
+            g_signal_connect(btn, "clicked", G_CALLBACK(on_button_append2), (gpointer)&sci[sci_pos]);
             gtk_grid_attach(GTK_GRID(grid), btn, col, row, 1, 1);
             sci_pos++;
         }
@@ -159,8 +190,14 @@ int main(int argc, char *argv[]) {
     g_signal_connect(equals, "clicked", G_CALLBACK(on_equals), NULL);
     gtk_grid_attach(GTK_GRID(grid), equals, 2, 6, 1, 1);
 
+    GtkWidget *back = gtk_button_new_with_label("DEL");
+    gtk_widget_set_hexpand(back, TRUE);
+    gtk_widget_set_vexpand(back, TRUE);
+    g_signal_connect(back, "clicked", G_CALLBACK(on_backs), NULL);
+    gtk_grid_attach(GTK_GRID(grid), back, 4, 5, 2, 1);
+
     // Clear button
-    GtkWidget *clear = gtk_button_new_with_label("C");
+    GtkWidget *clear = gtk_button_new_with_label("Clear");
     gtk_widget_set_hexpand(clear, TRUE);
     gtk_widget_set_vexpand(clear, TRUE);
     g_signal_connect(clear, "clicked", G_CALLBACK(on_clear), NULL);
