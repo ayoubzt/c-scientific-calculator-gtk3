@@ -1,8 +1,9 @@
-#include<stdio.h>
+#include <stdio.h>
 #include "fonction.h"
+#include <math.h>
 
-float power(float a,float b){
-    float result=1;
+double power(double a,double b){
+    double result=1;
     int i;
     if (b<0){
         b=-b;
@@ -15,34 +16,26 @@ float power(float a,float b){
   } 
   return result;
 } 
-float factorial(float a){
+double factorial(double a){
     int i, F=1;
-    if(a==0){return 1; }
-    if(a<0){return-1;} //erreur
+    if(a==0) return 1;
+    if(a<0) return NAN; //erreur
     for(i=1;i<=a;i++){
         F=F*i;
     } return F;
 } 
-float square_root(float a){
-    int i;
- float g=a/2;
-if(a<0){ return -1;}//erreur
-for(i=0;i<20;i++){
-    g=(g+a/g)/2;
-}
-return g;
-}
-float square_root(float a) {
-    if (a < 0) return -1; // erreur
-    float guess = a / 2;
+
+double square_root(double a) {
+    if (a < 0) return NAN; // erreur
+    double guess = a / 2;
     for (int i = 0; i < 20; i++) {
         guess = (guess + a / guess) / 2.0;
     }
     return guess;
 }
-float exponential(float a) {
-    float sum = 1.0;
-    float term = 1.0;
+double exponential(double a) {
+    double sum = 1.0;
+    double term = 1.0;
 
     for (int i = 1; i <= 20; i++) {
         term *= a / i;
@@ -50,9 +43,9 @@ float exponential(float a) {
     }
     return sum;
 }
-float sine(float a) {
-    float term = a;
-    float sum = a;
+double sine(double a) {
+    double term = a;
+    double sum = a;
 
     for (int i = 1; i <= 10; i++) {
         term *= (-1) * a * a / ((2*i)*(2*i+1));
@@ -60,9 +53,9 @@ float sine(float a) {
     }
     return sum;
 }
-float cosine(float a) {
-    float term = 1;
-    float sum = 1;
+double cosine(double a) {
+    double term = 1;
+    double sum = 1;
 
     for (int i = 1; i <= 10; i++) {
         term *= (-1) * a * a / ((2*i-1)*(2*i));
@@ -70,15 +63,15 @@ float cosine(float a) {
     }
     return sum;
 }
-float tangent(float a) {
-    float c = cosine(a);
-    if (c == 0) return 999999; // erreur
+double tangent(double a) {
+    double c = cosine(a);
+    if (c == 0) return NAN; // erreur
     return sine(a) / c;
 } 
-float dgr_to_rad(float a){
+double dgr_to_rad(double a){
     return a*3,14/180;
 }
-float rad_to_dgr(float a){
+double rad_to_dgr(double a){
     return a*180/3,14;
 }
 

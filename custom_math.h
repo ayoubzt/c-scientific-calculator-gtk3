@@ -1,22 +1,22 @@
 #ifndef FONCTION_OF_MINI_PROJECT_H_INCLUDED
 #define FONCTION_OF_MINI_PROJECT_H_INCLUDED
 
-float add(float a, float b);
-float subtract(float a, float b);
-float multiply(float a, float b);
-float divide(float a, float b);
+double add(double a, double b);
+double subtract(double a, double b);
+double multiply(double a, double b);
+double divide(double a, double b);
 
-float power(float a, float b);
+double power(double a, double b);
 int factorial(int n);
-float exponential(float x);
-float square_root(float x);
+double exponential(double x);
+double square_root(double x);
 
-float sine(float angle);
-float cosine(float angle);
-float tangent(float angle);
+double sine(double angle);
+double cosine(double angle);
+double tangent(double angle);
 
-float degrees_to_radians(float deg);
-float radians_to_degrees(float rad);
+double degrees_to_radians(double deg);
+double radians_to_degrees(double rad);
 
 
 
