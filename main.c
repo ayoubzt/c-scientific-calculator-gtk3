@@ -178,10 +178,19 @@ int main(int argc, char *argv[]) {
     g_signal_connect(mode_toggle, "clicked", G_CALLBACK(toggle_theme), NULL);
     gtk_grid_attach(GTK_GRID(grid), mode_toggle, 5, 0, 1, 1);
 
+    //icon
+    GdkPixbuf *icon;
+    GError *err = NULL;
+    icon = gdk_pixbuf_new_from_file("D:\\estin\\1cp\\1Semester\\Algorithms\\calc\\c-scientific-calculator-gtk3\\icon.png", &err);
+
+    if (!icon) {
+    g_printerr("Error loading icon: %s\n", err->message);
+    g_error_free(err);
+    }
     // Scientific buttons
     but sci[] = {
         {"sin", "s"}, {"cos", "c"}, {"tan", "t"},
-        {"log", "l"}, {"ln", "l"}, {"sqrt", "S"},
+        {"log", "L"}, {"ln", "l"}, {"sqrt", "S"},
         {"(", "("}, {")", ")"}, {"^", "^"}, 
         {"!", "f"}, {"π", "p"}, {"e", "e"}
     };

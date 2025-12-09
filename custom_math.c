@@ -17,6 +17,8 @@ double power(double a,double b){
   return result;
 } 
 double factorial(double a){
+    int b = a;
+    if (a-b) return NAN;
     double F = 1;
     if(a<0) return NAN; //erreur
     for(int i=1;i<=a;i++){

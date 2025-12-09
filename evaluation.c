@@ -65,6 +65,7 @@ void tokenise(char* string, stack* tokens) {
                 case 's': temp.function = 's'; push(tokens, temp); initToken(&temp);                      break;
                 case 't': temp.function = 't'; push(tokens, temp); initToken(&temp);                      break;
                 case 'l': temp.function = 'l'; push(tokens, temp); initToken(&temp);                      break;
+                case 'L': temp.function = 'L'; push(tokens, temp); initToken(&temp);                      break;
                 case 'S': temp.function = 'S'; push(tokens, temp); initToken(&temp);                      break;
                 case 'f': temp.function = 'f'; push(tokens, temp); initToken(&temp);                      break;
                 case '_': temp.function = '_'; push(tokens, temp); initToken(&temp);                      break;
@@ -119,6 +120,7 @@ double Evaluate(char* string) {
                           SStack.array[SStack.top].value = tangent(SStack.array[SStack.top].value);           break;
                 case 'S': SStack.array[SStack.top].value = square_root(SStack.array[SStack.top].value);       break;
                 case 'l': SStack.array[SStack.top].value = log(SStack.array[SStack.top].value);               break;
+                case 'L': SStack.array[SStack.top].value = log(SStack.array[SStack.top].value)/log(10);       break;
                 case 'f': SStack.array[SStack.top].value = factorial(SStack.array[SStack.top].value);         break;     
                 case '_': SStack.array[SStack.top].value *= -1;                                               break;
         
